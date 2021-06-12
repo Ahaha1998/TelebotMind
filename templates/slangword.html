@@ -1,0 +1,126 @@
+{% extends 'layout.html' %} {% block body %}
+<h2 class="title-main">SLANG<span class="second">WORD</span></h2>
+
+<h4 class="subtitle">PLEASE FILL THE SLANG AND STANDARD WORD</h4>
+
+<form
+  class="form-container"
+  action="/add_slang"
+  method="post"
+  enctype="multipart/form-data"
+  id="form"
+>
+  <div class="form-group row justify-content-center">
+    <label for="slang" class="col-sm-2 col-form-label">Slang Word</label>
+    <div class="col-sm-4">
+      <input
+        type="text"
+        class="form-control"
+        id="slang"
+        name="slang"
+        autocomplete="off"
+        required
+      />
+    </div>
+  </div>
+  <div class="form-group row justify-content-center">
+    <label for="standard" class="col-sm-2 col-form-label">Standard Word</label>
+    <div class="col-sm-4">
+      <input
+        type="text"
+        class="form-control"
+        id="standard"
+        name="standard"
+        autocomplete="off"
+        required
+      />
+    </div>
+  </div>
+  <div class="center-col">
+    <a class="button-start back" href="/"> Back </a>
+    <button type="submit" class="button-start admin">Add Data</button>
+    <label class="button-start">
+      <i class="fas fa-file-csv"></i>
+      <input type="file" name="import" id="import" hidden />
+    </label>
+    <a class="button-start" href="/ekspor_slang">
+      <i class="fas fa-file-export"></i>
+    </a>
+    <a class="button-start delete-all" href="/delete_all?table=slangword">
+      <i class="fas fa-dumpster-fire"></i>
+    </a>
+  </div>
+</form>
+
+<script>
+  document.getElementById("import").onchange = function () {
+    document.getElementById("form").submit();
+  };
+</script>
+
+<h4 class="title-main">LIST SLANG WORD</h4>
+{% if condition %}
+
+<form
+  class="form-container"
+  action="/search"
+  method="post"
+  id="form"
+  style="padding-top: 0px"
+>
+  <h4 class="subtitle">SEARCH SLANG</h4>
+  <input name="table" value="slangword" type="hidden" />
+  <div class="form-group row">
+    <div class="col-sm-4 offset-sm-4">
+      <input
+        type="text"
+        class="form-control"
+        id="search"
+        name="search"
+        autocomplete="off"
+        required
+      />
+    </div>
+    <div class="col-sm-1" style="padding-left: 0px">
+      <button type="submit" class="button-start mid">
+        <i class="fas fa-search"></i>
+      </button>
+    </div>
+  </div>
+</form>
+
+<div class="row" style="margin-bottom: 10px">
+  {% for item in data %}
+  <div class="col-lg-5" style="padding-right: 0px">
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col">
+            <p class="card-text" style="color: #12a986">Slang Word</p>
+          </div>
+          <div class="col">
+            <p class="card-text" style="color: #62c24f">Standard Word</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <h5 class="card-title-dataset">{{ item[1] }}</h5>
+          </div>
+          <div class="col">
+            <h5 class="card-title-dataset">{{ item[2] }}</h5>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-1" style="padding-left: 5px">
+    <a class="button-start delete" href="/delete_slang?id={{ item[0] }}">
+      <i class="fas fa-dumpster"></i>
+    </a>
+  </div>
+  {% if loop.index % 2 == 0 %}
+</div>
+<div class="row" style="margin-bottom: 10px">{% endif %} {% endfor %}</div>
+{{ pagination.links }} {% else %}
+<h4 class="subtitle">SLANG NOT FOUND :(</h4>
+{% endif %} {% endblock %}

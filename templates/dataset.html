@@ -1,0 +1,70 @@
+{% extends 'layout.html' %} {% block body %}
+<h2 class="title-main">DATA<span class="second">SET</span></h2>
+
+<h4 class="subtitle">INSERT CSV FILE HERE</h4>
+
+<form
+  class="form-container"
+  action="/add_dataset"
+  method="post"
+  enctype="multipart/form-data"
+  id="form"
+>
+  <div class="center-col">
+    <a class="button-start back" href="/"> Back </a>
+    <label class="button-start">
+      <i class="fas fa-file-csv"></i>
+      <input type="file" name="import" id="import" hidden />
+    </label>
+    <a class="button-start delete-all" href="/delete_all?table=dataset">
+      <i class="fas fa-dumpster-fire"></i>
+    </a>
+  </div>
+</form>
+
+<script>
+  document.getElementById("import").onchange = function () {
+    document.getElementById("form").submit();
+  };
+</script>
+
+{% if condition %}
+<h4 class="title-main">LIST DATASET FROM CSV</h4>
+
+{% for item in data %}
+<div class="row" style="margin-bottom: 15px">
+  <div class="col-lg-11" style="padding-right: 0px">
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col">
+            {% if item[2] == 1 %}
+            <p class="card-text">
+              Contain: <span style="color: #af3617">Abusive</span>
+            </p>
+            {% elif item[2] == 2 %}
+            <p class="card-text">
+              Contain: <span style="color: #12a986">Hate Speech</span>
+            </p>
+            {% elif item[2] == 3 %}
+            <p class="card-text">
+              Contain: <span style="color: #12a986">Hate Speech</span> &
+              <span style="color: #af3617">Abusive</span>
+            </p>
+            {% else %}
+            <p class="card-text">Contain: -</p>
+            {% endif %}
+          </div>
+          <div class="col-sm-4 left-col"></div>
+        </div>
+        <h5 class="card-title-dataset">{{ item[1] }} <br /></h5>
+      </div>
+    </div>
+  </div>
+  <div class="col" style="padding-left: 5px">
+    <a class="button-start delete" href="/delete_dataset?id={{ item[0] }}">
+      <i class="fas fa-dumpster"></i>
+    </a>
+  </div>
+</div>
+{% endfor %} {{ pagination.links }} {% endif %} {% endblock %}

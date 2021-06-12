@@ -1,0 +1,56 @@
+{% extends 'layout.html' %} {% block body %}
+
+<h1 class="title-main">
+  <span class="main-process"
+    >TELEBOT
+    <a class="second" data-text="START" href="/preprocess">MINDS</a></span
+  >
+</h1>
+<h4 class="subtitle" style="margin-top: 10px">
+  A SIMPLE PROJECT BY WAHYU HIDAYAH
+</h4>
+
+<div class="row main-body">
+  <div class="col left-col">
+    <button
+      type="button"
+      class="button-start"
+      onclick="window.location.href='/vocab'"
+    >
+      Add Abusive Vocabulary
+    </button>
+  </div>
+  <div class="col center-col">
+    <button
+      type="button"
+      class="button-start mid"
+      onclick="window.location.href='/dataset'"
+    >
+      Add Data Testing
+    </button>
+  </div>
+  <div class="col right-col">
+    <button
+      type="button"
+      class="button-start admin"
+      onclick="window.location.href='/slang'"
+    >
+      Slang Word Vocabulary
+    </button>
+  </div>
+</div>
+
+{% if summon %}
+<h4 class="subtitle warn">A CHANGE HAS BEEN DETECTED! PLEASE DO A RE-TRAIN!</h4>
+<div class="row" style="margin-top: 20px">
+  <div class="col center-col">
+    <button
+      type="button"
+      class="button-start train"
+      onclick="window.location.href='/re_train'"
+    >
+      Do Re-Train Data
+    </button>
+  </div>
+</div>
+{% endif %} {% endblock %}
