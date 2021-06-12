@@ -1,4 +1,3 @@
-from re import A
 import Ngram
 import database
 import telebot
@@ -8,12 +7,8 @@ from os import path
 ngram = Ngram.Ngram()
 
 ###################### Set the Training Data ######################
-dataset_limit = 10
-
 # Count Total Data Abusive & Slangword, then convert them to JSON
-if path.exists('dataset_result.json'):
-    a
-else:
+if not path.exists('data json/total_data.json'):
     total_abusive = database.count_row("abusive")
     total_slangword = database.count_row("slangword")
     total_both = {'abusive': total_abusive, 'slangword': total_slangword}
@@ -21,26 +16,37 @@ else:
                         total_both, "convert", None)
 
 # Get Data Abusive From Database & Convert them to JSON
-abusive = database.get_all("abusive")
-ngram.jsonConverter("data json/data_abusive.json",
-                    abusive, "convert", None)
+if not path.exists('data json/data_abusive.json'):
+    abusive = database.get_all("abusive")
+    ngram.jsonConverter("data json/data_abusive.json",
+                        abusive, "convert", None)
 
 # Get Data Slangword From Database & Convert them to JSON
-slangword = database.get_all("slangword")
-ngram.jsonConverter("data json/data_slangword.json",
-                    slangword, "convert", None)
+if not path.exists('data json/data_slangword.json'):
+    slangword = database.get_all("slangword")
+    ngram.jsonConverter("data json/data_slangword.json",
+                        slangword, "convert", None)
 
 # Train Model Ngram (Bi&Tri)
-ngram.trainData(3, dataset_limit, "data json/bot/trigram_train.json")
+if not path.exists('data json/trigram_train.json'):
+    dataset_limit = 10
+    ngram.trainData(3, dataset_limit, "data json/trigram_train.json")
 
 ###################### Set the Testing Data ######################
 testing_limit = 10
+
+# Get Data Abusive & Slangword from JSON
+get_abusive_from_json = ngram.jsonConverter(
+    "data json/data_abusive.json", None, "load", None)
+data_abusive = ngram.getAbusiveData(get_abusive_from_json)
+data_slang = ngram.jsonConverter(
+    "data json/data_slangword.json", None, "load", None)
 
 obj_dataset = ngram.getDataset(
     database.get_per_page("dataset", dataset_limit, testing_limit))
 obj_re_dataset = ngram.checkEmoji(obj_dataset)
 obj_tokenize = ngram.tokenizing(obj_re_dataset)
-obj_replace = ngram.replacing(obj_tokenize, data_slang, only_abusive)
+obj_replace = ngram.replacing(obj_tokenize, data_slang, data_abusive)
 obj_filter = ngram.filtering(obj_replace)
 obj_stem = ngram.stemming(obj_filter)
 
@@ -61,9 +67,9 @@ def send_welcome(message):
 def re_msg(message):
     database.add_message_bot(message.text)
     def msg(): return ([message.text])
-    ngram.botPreprocessing(msg, data_slang, only_abusive)
+    ngram.botPreprocessing(msg, data_slang, data_abusive)
     obj_result = list(ngram.testData(
-        2, obj_stem, bigram_train_data, None, data_slang, "bot"))
+        3, None, obj_stem, None, data_slang, "bot"))
     print(obj_result)
 
     bot.reply_to(message, obj_result, parse_mode='MarkdownV2')

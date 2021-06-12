@@ -157,10 +157,10 @@ class Ngram(object):
 
         if n == 2:
             train_prob = self.jsonConverter(
-                "data json/admin/bigram_train.json", None, "load", None)
+                "data json/bigram_train.json", None, "load", None)
         else:
             train_prob = self.jsonConverter(
-                "data json/admin/trigram_train.json", None, "load", None)
+                "data json/trigram_train.json", None, "load", None)
 
         if mode == "bot":
             stem_msg = (word for data in self.bot_stem() for word in data)

@@ -8,7 +8,7 @@ from os import path
 
 ngram = Ngram.Ngram()
 
-dataset_limit = 10
+dataset_limit = 2000
 
 # Count Total Data Abusive & Slangword, then convert them to JSON
 total_abusive = database.count_row("abusive")
@@ -28,8 +28,8 @@ ngram.jsonConverter("data json/data_slangword.json",
                     slangword, "convert", None)
 
 # Train Model Ngram (Bi&Tri)
-ngram.trainData(2, dataset_limit, "data json/admin/bigram_train.json")
-ngram.trainData(3, dataset_limit, "data json/admin/trigram_train.json")
+ngram.trainData(2, dataset_limit, "data json/bigram_train.json")
+ngram.trainData(3, dataset_limit, "data json/trigram_train.json")
 
 app = Flask(__name__)
 
@@ -109,7 +109,6 @@ def add_vocab():
 def ekspor():
     obj = database.get_abusive()
     database.eksporr_abusive_csv(obj)
-
     return redirect('/vocab')
 
 
