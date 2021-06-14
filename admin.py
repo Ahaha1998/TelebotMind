@@ -8,7 +8,7 @@ from os import path
 
 ngram = Ngram.Ngram()
 
-dataset_limit = 2000
+dataset_limit = 8000
 
 # Count Total Data Abusive & Slangword, then convert them to JSON
 total_abusive = database.count_row("abusive")
@@ -236,6 +236,7 @@ def process():
     session['show'] = request.form.get('detail')
 
     start_dataset = ngram.getRatioDataset(dataset_limit, 0.8)
+    t = 1
 
     # Get Data Abusive & Slangword from JSON
     get_abusive_from_json = ngram.jsonConverter(
@@ -255,7 +256,7 @@ def process():
     obj_stem = ngram.stemming(obj_filter)
 
     obj_result = ngram.testData(
-        model, None, obj_stem, obj_replace, data_slang, "admin")
+        model, None, obj_stem, obj_replace, data_slang, "admin", t)
 
     # Wrap all in Dict & Convert them to JSON
     generator_data = {'dataset': ngram.listConverter(

@@ -24,12 +24,13 @@ class Ngram(object):
     promina = {"aku": "aku", "kamu": "kamu", "dia": "dia",
                "kalian": "kalian", "mereka": "mereka"}
 
-    # All Word From Tweet Dataset, Marked Word, Filtered Result, Bot Stem & Bot Replace
+    # All Word From Tweet Dataset, Marked Word, Filtered Result, Bot Stem, Bot Replace & isDeletedMsg
     word_dataset = None
     mark_word = None
     replaced_result = None
     bot_stem = None
     bot_replace = None
+    is_deleted_msg = None
 
     # Label
     label_aktual = []
@@ -152,7 +153,7 @@ class Ngram(object):
         return ngram_prob
 
     # Testing Data
-    def testData(self, n, train_prob, dataset_stem, dataset_replace, data_slang, mode):
+    def testData(self, n, train_prob, dataset_stem, dataset_replace, data_slang, mode, threshold):
         start_time = time.time()
 
         if n == 2:
@@ -163,6 +164,7 @@ class Ngram(object):
                 "data json/trigram_train.json", None, "load", None)
 
         if mode == "bot":
+            self.is_deleted_msg = False
             stem_msg = (word for data in self.bot_stem() for word in data)
             stem_sample = (word for data in dataset_stem() for word in data)
             self.word_dataset = (set(chain(stem_msg, stem_sample)))
@@ -207,14 +209,16 @@ class Ngram(object):
                     for x in range(len(padded_row)-n):
                         target = padded_row[x:x+n]
                         next_target = padded_row[(x+1):(x+1)+n]
-                        prob += float(model.counts[[target]]
-                                      [next_target] / model.counts[target])
+                        try:
+                            prob += float(model.counts[[target]]
+                                          [next_target] / model.counts[target])
+                        except ZeroDivisionError:
+                            prob += 0
                     count_similarity_word(
                         row, prob, None, duplicate_replace)
 
         def count_similarity_word(row, prob, duplicate_stem, duplicate_replace):
             row_unstem = row
-
             while check_abusive_slang(row_unstem):
                 if mode == "admin":
                     index_label = get_index_label(row, duplicate_stem)
@@ -225,8 +229,10 @@ class Ngram(object):
                 if check_stemmer_word(row, duplicate_replace):
                     row_unstem = check_stemmer_word(row, duplicate_replace)
 
+                print(self.mark_word, label)
                 if label == 1:
-                    if score < 1:
+                    self.is_deleted_msg = True
+                    if score < threshold:
                         if mode == "admin":
                             if self.label_prediksi[index_label] == 2 or check_promina(index_label, duplicate_replace):
                                 self.label_prediksi[index_label] = 3
@@ -242,7 +248,7 @@ class Ngram(object):
                         self.replaced_result = [[re.sub('(?<![a-zA-Z])%s(?![a-zA-Z])' % (row_unstem), create_mark_label1(
                             row_unstem), word) for word in row_replace] for row_replace in self.replaced_result]
                 elif label == 2:
-                    if score < 1:
+                    if score < threshold:
                         if mode == "admin":
                             if self.label_prediksi[index_label] == 1:
                                 self.label_prediksi[index_label] = 3
@@ -331,6 +337,9 @@ class Ngram(object):
         self.bot_replace = obj_replace
         obj_filter = self.filtering(obj_replace)
         self.bot_stem = self.stemming(obj_filter)
+
+    def shouldWeDelete(self):
+        return self.is_deleted_msg
 
     # Preprocessing Step
     def checkEmoji(self, word):
