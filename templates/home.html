@@ -3,8 +3,11 @@
 <h1 class="title-main">
   <span class="main-process"
     >TELEBOT
-    <a class="second" data-text="START" href="/preprocess">MINDS</a></span
-  >
+    {% if summon %}
+      <a class="second" data-text="TRAIN" href="/re_train">MINDS</a></span>
+    {% else %}
+      <a class="second" data-text="START" href="/preprocess">MINDS</a></span>
+    {% endif %}
 </h1>
 <h4 class="subtitle" style="margin-top: 10px">
   A SIMPLE PROJECT BY WAHYU HIDAYAH
@@ -39,18 +42,4 @@
     </button>
   </div>
 </div>
-
-{% if summon %}
-<h4 class="subtitle warn">A CHANGE HAS BEEN DETECTED! PLEASE DO A RE-TRAIN!</h4>
-<div class="row" style="margin-top: 20px">
-  <div class="col center-col">
-    <button
-      type="button"
-      class="button-start train"
-      onclick="window.location.href='/re_train'"
-    >
-      Do Re-Train Data
-    </button>
-  </div>
-</div>
-{% endif %} {% endblock %}
+ {% endblock %}

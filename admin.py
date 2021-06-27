@@ -8,7 +8,8 @@ from os import path
 
 ngram = Ngram.Ngram()
 
-dataset_limit = 8000
+dataset_limit = 1000
+start_dataset = ngram.getRatioDataset(dataset_limit, 0.7)
 
 # Count Total Data Abusive & Slangword, then convert them to JSON
 total_abusive = database.count_row("abusive")
@@ -28,8 +29,8 @@ ngram.jsonConverter("data json/data_slangword.json",
                     slangword, "convert", None)
 
 # Train Model Ngram (Bi&Tri)
-ngram.trainData(2, dataset_limit, "data json/bigram_train.json")
-ngram.trainData(3, dataset_limit, "data json/trigram_train.json")
+ngram.trainData(2, start_dataset, "data json/bigram_train.json")
+ngram.trainData(3, start_dataset, "data json/trigram_train.json")
 
 app = Flask(__name__)
 
@@ -91,11 +92,12 @@ def vocab():
 def add_vocab():
     uploaded_file = request.files['import']
     word = request.form.get('abusive')
-    label = int(request.form.get('label'))
+    if request.form.get('label'):
+        label = int(request.form.get('label'))
 
     if uploaded_file.filename != '':
-        file_path = path.join(
-            app.config['UPLOAD_FOLDER'], uploaded_file.filename)
+        file_path = '%s/%s' % (app.config['UPLOAD_FOLDER'],
+                               uploaded_file.filename)
         uploaded_file.save(file_path)
         database.impor_abusive_csv(file_path)
 
@@ -106,8 +108,8 @@ def add_vocab():
 
 
 @app.route('/ekspor_vocab')
-def ekspor():
-    obj = database.get_abusive()
+def ekspor_vocab():
+    obj = database.get_all('abusive')
     database.eksporr_abusive_csv(obj)
     return redirect('/vocab')
 
@@ -150,14 +152,21 @@ def add_slang():
     standard = request.form.get('standard')
 
     if uploaded_file.filename != '':
-        file_path = path.join(
-            app.config['UPLOAD_FOLDER'], uploaded_file.filename)
+        file_path = '%s/%s' % (app.config['UPLOAD_FOLDER'],
+                               uploaded_file.filename)
         uploaded_file.save(file_path)
         database.impor_slang_csv(file_path)
 
     if slang != '' and standard != '':
         database.add_slang(slang, standard)
 
+    return redirect('/slang')
+
+
+@app.route('/ekspor_slang')
+def ekspor_slang():
+    obj = database.get_all('slangword')
+    database.eksporr_slangword_csv(obj)
     return redirect('/slang')
 
 
@@ -190,8 +199,8 @@ def add_dataset():
     uploaded_file = request.files['import']
 
     if uploaded_file.filename != '':
-        file_path = path.join(
-            app.config['UPLOAD_FOLDER'], uploaded_file.filename)
+        file_path = '%s/%s' % (app.config['UPLOAD_FOLDER'],
+                               uploaded_file.filename)
         uploaded_file.save(file_path)
         database.impor_dataset_csv(file_path)
 
@@ -231,12 +240,12 @@ def search():
 
 @app.route('/process', methods=['POST'])
 def process():
-    limit = int(request.form.get('limit'))
+    mode = request.form.get('mode')
+    t = int(request.form.get('limit')) / 100
+    print(t)
     model = int(request.form.get('model'))
-    session['show'] = request.form.get('detail')
 
-    start_dataset = ngram.getRatioDataset(dataset_limit, 0.8)
-    t = 1
+    offset = ngram.getRatioDataset(dataset_limit, 0.3)
 
     # Get Data Abusive & Slangword from JSON
     get_abusive_from_json = ngram.jsonConverter(
@@ -246,7 +255,11 @@ def process():
         "data json/data_slangword.json", None, "load", None)
 
     # Get Dataset with offset from Training Dataset
-    offset_dataset = database.get_per_page("dataset", start_dataset, limit)
+    if mode == "Train":
+        offset_dataset = database.get_limit(start_dataset)
+    else:
+        offset_dataset = database.get_per_page(
+            "dataset", start_dataset, offset)
 
     obj_dataset = ngram.getDataset(offset_dataset)
     obj_re_dataset = ngram.checkEmoji(obj_dataset)
@@ -276,6 +289,8 @@ def process():
 @app.route('/result')
 def result():
     if path.exists('data json/result.json'):
+        accuracy = ngram.getAccuracy()
+
         page = request.args.get(get_page_parameter(), type=int, default=1)
         startpage = (page-1)*5
 
@@ -306,10 +321,7 @@ def result():
         pagination = Pagination(page=page, total=len(
             list_dataset), per_page=5, css_framework='bootstrap4')
 
-        if session.get('show') == "True":
-            return render_template('detail_result.html', dataset=dataset_per_page, tokenize=tokenize_per_page, replace=replace_per_page, filter=filter_per_page, stem=stem_per_page, result=result_per_page, pagination=pagination, aktual=aktual_per_page, prediksi=prediksi_per_page)
-        else:
-            return render_template('result.html', dataset=dataset_per_page, result=result_per_page, pagination=pagination, aktual=aktual_per_page, prediksi=prediksi_per_page)
+        return render_template('detail_result.html', accuracy=accuracy, dataset=dataset_per_page, tokenize=tokenize_per_page, replace=replace_per_page, filter=filter_per_page, stem=stem_per_page, result=result_per_page, pagination=pagination, aktual=aktual_per_page, prediksi=prediksi_per_page)
 
 
 @app.route('/re_train')

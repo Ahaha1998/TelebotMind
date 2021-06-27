@@ -355,6 +355,16 @@ a.button-start:hover {
   padding: 15px 150px;
 }
 
+a.nav-link {
+  color: #62c24f;
+}
+
+a.nav-link.disabled {
+  text-decoration: none;
+  cursor: default !important;
+  color: #bbbbbb !important;
+}
+
 .table {
   margin-top: 20px;
   margin-bottom: 70px;

@@ -12,10 +12,22 @@ db = mysql.connector.connect(**config)
 cursor = db.cursor()
 
 
-def add_message_bot(data):
-    sql = ("INSERT INTO message (msg) SELECT %s FROM DUAL WHERE NOT EXISTS (SELECT msg FROM message WHERE msg = %s) LIMIT 1")
-    cursor.execute(sql, (data, data,))
+def add_message_bot(data, data2):
+    sql = ("INSERT INTO message (msg, user_id) VALUES (%s, %s)")
+    cursor.execute(sql, (data, data2,))
     db.commit()
+
+
+def del_all_message(data):
+    sql = ("DELETE FROM message WHERE user_id = %s")
+    cursor.execute(sql, (data,))
+    db.commit()
+
+
+def count_penalty(data):
+    sql = ("SELECT COUNT(*) FROM message WHERE user_id = %s")
+    cursor.execute(sql, (data,))
+    return cursor.fetchone()[0]
 
 
 def add_abusive(data, data2):
@@ -121,11 +133,18 @@ def impor_slang_csv(filePath):
 
 
 def eksporr_abusive_csv(data):
-    dic = {}
-    dat = []
-    for row in data:
-        dat.append(row[1])
-    dic['ABUSIVE'] = dat
-    df = pd.DataFrame(dic, columns=['ABUSIVE'])
+    dat = [row[1] for row in data]
+    dat2 = [row[2] for row in data]
+    dic = {'Query': dat, 'Label': dat2}
+    df = pd.DataFrame(dic, columns=['Query', 'Label'])
     df.to_csv(r'D:\College\Semester 8\SkripsiProgram\static\export\export_abusive.csv',
+              index=False, header=True)
+
+
+def eksporr_slangword_csv(data):
+    dat = [row[1] for row in data]
+    dat2 = [row[2] for row in data]
+    dic = {'Before': dat, 'After': dat2}
+    df = pd.DataFrame(dic, columns=['Before', 'After'])
+    df.to_csv(r'D:\College\Semester 8\SkripsiProgram\static\export\export_slangword.csv',
               index=False, header=True)

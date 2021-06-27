@@ -25,6 +25,11 @@
   <li class="nav-item">
     <a class="nav-link" data-toggle="tab" href="#result">FINAL RESULT</a>
   </li>
+  <li class="nav-item">
+    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true"
+      ><span class="second">ACCURACY:</span> {{ accuracy }}</a
+    >
+  </li>
 </ul>
 
 <div class="tab-content">
@@ -37,21 +42,22 @@
         <tr>
           <td>
             {% if aktual[loop.index-1] == 1 %}
-            <p class="card-text">
+            <p class="card-text" style="margin-bottom: 0">
               Label Dataset: <span style="color: #af3617">Abusive</span>
             </p>
             {% elif aktual[loop.index-1] == 2 %}
-            <p class="card-text">
+            <p class="card-text" style="margin-bottom: 0">
               Label Dataset: <span style="color: #12a986">Hate Speech</span>
             </p>
             {% elif aktual[loop.index-1] == 3 %}
-            <p class="card-text">
+            <p class="card-text" style="margin-bottom: 0">
               Label Dataset: <span style="color: #12a986">Hate Speech</span> &
               <span style="color: #af3617">Abusive</span>
             </p>
             {% else %}
-            <p class="card-text">Label Dataset: -</p>
-            {% endif %} {{ item }}
+            <p class="card-text" style="margin-bottom: 0">Label Dataset: -</p>
+            {% endif %}
+            <p style="margin-bottom: 0">{{ item }}</p>
           </td>
         </tr>
         {% endfor %}
@@ -119,21 +125,22 @@
         <tr>
           <td>
             {% if prediksi[loop.index-1] == 1 %}
-            <p class="card-text">
+            <p class="card-text" style="margin-bottom: 0">
               Label Prediksi: <span style="color: #af3617">Abusive</span>
             </p>
             {% elif prediksi[loop.index-1] == 2 %}
-            <p class="card-text">
+            <p class="card-text" style="margin-bottom: 0">
               Label Prediksi: <span style="color: #12a986">Hate Speech</span>
             </p>
             {% elif prediksi[loop.index-1] == 3 %}
-            <p class="card-text">
+            <p class="card-text" style="margin-bottom: 0">
               Label Prediksi: <span style="color: #12a986">Hate Speech</span> &
               <span style="color: #af3617">Abusive</span>
             </p>
             {% else %}
-            <p class="card-text">Label Prediksi: -</p>
-            {% endif %} {{ item | safe }}
+            <p class="card-text" style="margin-bottom: 0">Label Prediksi: -</p>
+            {% endif %}
+            <p style="margin-bottom: 0">{{ item | safe }}</p>
           </td>
         </tr>
         {% endfor %}

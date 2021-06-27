@@ -5,12 +5,25 @@
 
 <form class="form-container" action="/process" method="post">
   <div class="form-group row justify-content-center">
+    <label for="mode" class="col-sm-2 col-form-label">Used Data</label>
+    <div class="col-sm-6">
+      <select id="mode" name="mode" class="form-control" required>
+        <option value="">Choose..</option>
+        <option value="Train">Data Train</option>
+        <option value="Test">Data Test</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group row justify-content-center">
     <label for="limit" class="col-sm-2 col-form-label">Limit</label>
     <div class="col-sm-6">
       <input
         type="number"
         class="form-control"
         id="limit"
+        min="10"
+        max="100"
+        placeholder="10%-100%"
         name="limit"
         required
       />
@@ -25,18 +38,6 @@
         <option value="3">Trigram</option>
       </select>
     </div>
-  </div>
-  <div class="form-check row justify-content-center">
-    <input
-      class="form-check-input"
-      type="checkbox"
-      value="True"
-      id="detail"
-      name="detail"
-    />
-    <label class="form-check-label" for="detail">
-      Show PreProcessing Step
-    </label>
   </div>
   <div class="center-col">
     <a class="button-start back" href="/"> Back </a>

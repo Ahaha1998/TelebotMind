@@ -30,13 +30,14 @@ if not path.exists('data json/data_slangword.json'):
                         slangword, "convert", None)
 
 # Train Model Ngram (Bi&Tri)
-dataset_limit = 2000
+dataset_limit = 1500
 if not path.exists('data json/trigram_train.json'):
     ngram.trainData(3, dataset_limit, "data json/trigram_train.json")
 
 ###################### Set the Testing Data ######################
-testing_limit = 300
-t = 2
+start_dataset = ngram.getRatioDataset(dataset_limit, 0.7)
+offset = ngram.getRatioDataset(dataset_limit, 0.3)
+t = 0.3
 
 # Get Data Abusive & Slangword from JSON
 get_abusive_from_json = ngram.jsonConverter(
@@ -46,7 +47,7 @@ data_slang = ngram.jsonConverter(
     "data json/data_slangword.json", None, "load", None)
 
 obj_dataset = ngram.getDataset(
-    database.get_per_page("dataset", testing_limit, testing_limit))
+    database.get_per_page("dataset", start_dataset, offset))
 obj_re_dataset = ngram.checkEmoji(obj_dataset)
 obj_tokenize = ngram.tokenizing(obj_re_dataset)
 obj_replace = ngram.replacing(obj_tokenize, data_slang, data_abusive)
@@ -68,6 +69,12 @@ def send_welcome(message):
                     """)
 
 
+@bot.message_handler(commands=['help'])
+def send_stop(message):
+    bot.send_message(
+        message.chat.id, "\\- Bot ini merupakan bot filter chat yang mana bot ini akan mem\\-filter semua chat yang mengandung kata kasar\\. \n\n\\- Jika bot ini dimasukkan ke dalam grup, bot dapat menghapus chat yang mengandung kata kasar di dalam grup\\.\n\n*Note: Fitur hapus pesan hanya bekerja dalam grup chat dan posisi bot menjadi administrator\\!*", parse_mode='MarkdownV2')
+
+
 @bot.message_handler(commands=['stop'])
 def send_stop(message):
     bot.send_message(
@@ -80,26 +87,34 @@ def re_msg(message):
     def msg(): return ([message.text])
     ngram.botPreprocessing(msg, data_slang, data_abusive)
     obj_result = list(ngram.testData(
-        3, None, obj_stem, None, data_slang, "bot", t))
+        2, None, obj_stem, None, data_slang, "bot", t))
     # To Get Group Chat, set the privacy to DISABLED in BotFather
-    # print("message detail:", message)
-    database.add_message_bot(message.text)
-    combined_result = "@%s said %s" % (
-        message.from_user.first_name, obj_result)
+    print("message detail:", message)
+
+    combined_result = "@%s said '%s'" % (
+        message.from_user.username, obj_result[0])
+
+    print(combined_result)
+
     if message.chat.type == "group":
-        print(ngram.shouldWeDelete())
         if ngram.shouldWeDelete():
+            database.add_message_bot(message.text, message.from_user.id)
             bot.send_message(message.chat.id, combined_result,
                              parse_mode='MarkdownV2')
             bot.delete_message(message.chat.id, message.message_id)
+            counter = database.count_penalty(message.from_user.id)
+            if counter > 3:
+                bot.kick_chat_member(message.chat.id, message.from_user.id)
+                database.del_all_message(message.from_user.id)
+
     elif message.chat.type == "private":
         bot.send_message(message.chat.id, obj_result,
                          parse_mode='MarkdownV2')
-    # if message.from_user.id != 860946303:
 
 
+# while True:
 try:
     print("Bot is running")
     bot.polling(none_stop=True)
-except ConnectionError:
+except [ConnectionError, ConnectionResetError]:
     sleep(300)

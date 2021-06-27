@@ -13,6 +13,7 @@ from nltk.lm import MLE
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
 
 
 class Ngram(object):
@@ -20,14 +21,12 @@ class Ngram(object):
     to_match = ['((www\.[^\s]+)|(https?://[^\s]+)|(http?://[^\s]+))',
                 '[^a-zA-Z]+', ' +', '\n', 'rt ', 'user']
 
-    # Promina (Kata ganti orang)
-    promina = {"aku": "aku", "kamu": "kamu", "dia": "dia",
-               "kalian": "kalian", "mereka": "mereka"}
-
     # All Word From Tweet Dataset, Marked Word, Filtered Result, Bot Stem, Bot Replace & isDeletedMsg
     word_dataset = None
     mark_word = None
     replaced_result = None
+    accuracy = None
+    # For Bot Mode
     bot_stem = None
     bot_replace = None
     is_deleted_msg = None
@@ -67,6 +66,9 @@ class Ngram(object):
 
     def getPrediksiLabel(self):
         return self.label_prediksi
+
+    def getAccuracy(self):
+        return self.accuracy
 
     def getAllWordFromDataset(self, data):
         self.word_dataset = (set(word for x in data() for word in x))
@@ -113,8 +115,7 @@ class Ngram(object):
             "data json/data_slangword.json", None, "load", None)
 
         def preprocessing():
-            limit = self.getRatioDataset(dataset_limit, 0.8)
-            obj_dataset = self.getDataset(database.get_limit(limit))
+            obj_dataset = self.getDataset(database.get_limit(dataset_limit))
             obj_re_dataset = self.checkEmoji(obj_dataset)
             obj_tokenize = self.tokenizing(obj_re_dataset)
             obj_replace = self.replacing(
@@ -141,8 +142,11 @@ class Ngram(object):
             for x in range(len(padded_row)-n):
                 word = padded_row[x:x+n]
                 next_word = padded_row[(x+1):(x+1)+n]
-                prob += float(model.counts[[word]]
-                              [next_word] / model.counts[word])
+                try:
+                    prob += float(model.counts[[word]]
+                                  [next_word] / model.counts[word])
+                except ZeroDivisionError:
+                    prob += 0
 
             if row in data_abusive():
                 ngram_prob[row] = prob
@@ -183,7 +187,7 @@ class Ngram(object):
             duplicate_stem = (word for data in self.bot_stem()
                               for word in data)
         else:
-            self.label_prediksi = self.label_aktual[:]
+            self.label_prediksi = [0 for i in range(len(self.label_aktual))]
             self.replaced_result = [[word for word in row()]
                                     for row in dataset_replace()]
             duplicate_stem = [row for row in dataset_stem()]
@@ -192,16 +196,20 @@ class Ngram(object):
 
         def count_prob_dataset(duplicate_stem, duplicate_replace):
             if mode == "admin":
-                for row in self.word_dataset:
-                    prob = 0
-                    padded_row = "_%s_" % (row)
-                    for x in range(len(padded_row)-n):
-                        target = padded_row[x:x+n]
-                        next_target = padded_row[(x+1):(x+1)+n]
-                        prob += float(model.counts[[target]]
-                                      [next_target] / model.counts[target])
-                    count_similarity_word(
-                        row, prob, duplicate_stem, duplicate_replace)
+                for i, row_stem in enumerate(duplicate_stem):
+                    for row in row_stem:
+                        prob = 0
+                        padded_row = "_%s_" % (row)
+                        for x in range(len(padded_row)-n):
+                            target = padded_row[x:x+n]
+                            next_target = padded_row[(x+1):(x+1)+n]
+                            try:
+                                prob += float(model.counts[[target]]
+                                              [next_target] / model.counts[target])
+                            except ZeroDivisionError:
+                                prob += 0
+                        count_similarity_word(
+                            i, row, prob, duplicate_replace)
             else:
                 for row in duplicate_stem:
                     prob = 0
@@ -215,28 +223,24 @@ class Ngram(object):
                         except ZeroDivisionError:
                             prob += 0
                     count_similarity_word(
-                        row, prob, None, duplicate_replace)
+                        None, row, prob, duplicate_replace)
 
-        def count_similarity_word(row, prob, duplicate_stem, duplicate_replace):
+        def count_similarity_word(index_label, row, prob, duplicate_replace):
             row_unstem = row
             while check_abusive_slang(row_unstem):
-                if mode == "admin":
-                    index_label = get_index_label(row, duplicate_stem)
-
                 label = database.get_per_label_abusive(self.mark_word[0])
                 score = (prob - self.mark_word[1])**2 / self.mark_word[1]
 
                 if check_stemmer_word(row, duplicate_replace):
                     row_unstem = check_stemmer_word(row, duplicate_replace)
 
-                print(self.mark_word, label)
                 if label == 1:
                     self.is_deleted_msg = True
                     if score < threshold:
                         if mode == "admin":
-                            if self.label_prediksi[index_label] == 2 or check_promina(index_label, duplicate_replace):
+                            if self.label_prediksi[index_label] == 2:
                                 self.label_prediksi[index_label] = 3
-                            else:
+                            elif self.label_prediksi[index_label] == 0:
                                 self.label_prediksi[index_label] = label
 
                         self.replaced_result = [[re.sub('(?<![a-zA-Z])%s(?![a-zA-Z])' % (row_unstem), create_star(
@@ -252,7 +256,7 @@ class Ngram(object):
                         if mode == "admin":
                             if self.label_prediksi[index_label] == 1:
                                 self.label_prediksi[index_label] = 3
-                            else:
+                            elif self.label_prediksi[index_label] == 0:
                                 self.label_prediksi[index_label] = label
 
                         self.replaced_result = [[re.sub('(?<![a-zA-Z])%s(?![a-zA-Z])' % (row_unstem), create_mark_label2(row_unstem), word)
@@ -281,28 +285,18 @@ class Ngram(object):
                     mark_founder([key, train_prob[key]])
                     return True
 
-        def get_index_label(row, duplicate_stem):
-            for i, row_replace in enumerate(duplicate_stem):
-                if row in row_replace:
-                    return i
-
         def check_stemmer_word(row, duplicate_result):
             for row_replace in duplicate_result:
                 for row_x in row_replace:
                     if self.stemmer.stem(row_x) == row:
                         return row_x
 
-        def check_promina(index, duplicate_result):
-            for subjek in self.promina:
-                if subjek in duplicate_result[index]:
-                    return True
-
         def mark_founder(x):
             self.mark_word = x
             return True
 
         def create_star(x):
-            return '*' * len(x) if mode == "admin" else '😇' * len(x)
+            return '*' * len(x) if mode == "admin" else '\\*' * len(x)
 
         def create_mark_label1(x):
             return '<span style="color: #af3617; font-weight: 600;">%s</span>' % (x) if mode == "admin" else '~%s~' % (x)
@@ -326,6 +320,8 @@ class Ngram(object):
         if mode == "admin":
             print(confusion_matrix(self.label_aktual, self.label_prediksi))
             print(classification_report(self.label_aktual, self.label_prediksi))
+            self.accuracy = accuracy_score(
+                self.label_aktual, self.label_prediksi)
 
         print("--- %s seconds ---" % (time.time() - start_time))
         return merged_result
