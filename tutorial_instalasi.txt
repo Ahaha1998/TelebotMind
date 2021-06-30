@@ -10,7 +10,9 @@
 
 4. pip install -r requirements.txt (install library in requirement)
 
-5. import database telebot.sql
+5. create database called 'telebot'
+
+6. import database telebot.sql
 
 
 - Running Admin:
