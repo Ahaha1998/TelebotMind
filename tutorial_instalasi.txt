@@ -1,0 +1,24 @@
+- Tutorial Instalasi Projek:
+
+1. git clone https://github.com/Ahaha1998/TelebotMind.git
+
+2. create virtual venv: 
+   py -3 -m venv .venv
+
+3. in command prompt, use this to go inside virtual venv: 
+   .venv\scripts\activate
+
+4. pip install -r requirements.txt (install library in requirement)
+
+5. import database telebot.sql
+
+
+- Running Admin:
+python admin.py
+
+- Running Bot:
+python bot.py
+
+- search bot username with @filter_pesan_bot with name Re-Pesantasi
+
+- if you want to make bot can delete message in group chat, make sure the bot become administrator in that group chat. Otherwise the bot can't delete chat in group chat.
