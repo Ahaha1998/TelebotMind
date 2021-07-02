@@ -14,6 +14,8 @@
 
 6. import database telebot.sql
 
+Note: for export function in database.py, change the directory with your own directory
+
 Before running the projek, turn on xampp apache & mySQL
 - Running Admin:
 python admin.py
