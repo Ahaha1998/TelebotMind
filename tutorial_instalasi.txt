@@ -15,6 +15,7 @@
 6. import database telebot.sql
 
 Note: for export function in database.py, change the directory with your own directory
+Ex: D:\TelebotMind\static\export\export_abusive.csv
 
 Before running the projek, turn on xampp apache & mySQL
 - Running Admin:
