@@ -2,10 +2,10 @@
 
 1. git clone https://github.com/Ahaha1998/TelebotMind.git
 
-2. create virtual venv: 
+2. create virtual venv inside projek folder: 
    py -3 -m venv .venv
 
-3. in command prompt, use this to go inside virtual venv: 
+3. before install the requrements, use this to go inside virtual venv: 
    .venv\scripts\activate
 
 4. pip install -r requirements.txt (install library in requirement)
