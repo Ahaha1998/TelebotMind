@@ -14,7 +14,7 @@
 
 6. import database telebot.sql
 
-
+Before running the projek, turn on xampp apache & mySQL
 - Running Admin:
 python admin.py
 
